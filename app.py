@@ -846,40 +846,57 @@ elif page == "📊 Student Performance (std.csv)":
         with col_info2:
             st.markdown(f"**Features:** {len(df.columns)}")
         
-        st.markdown("### 2. Filter by Age Range")
+        st.markdown("### 2. Filter by Age")
         
         min_age = int(df['Student_Age'].min())
         max_age = int(df['Student_Age'].max())
         
-        age_range = st.slider("Select Age Range", min_age, max_age, (min_age, max_age))
+        max_age_filter = st.slider("Select Maximum Age", min_age, max_age, max_age)
         
-        df_filtered = df[(df['Student_Age'] >= age_range[0]) & (df['Student_Age'] <= age_range[1])]
+        df_filtered = df[df['Student_Age'] <= max_age_filter]
         
-        st.markdown(f"**Filtered Records:** {len(df_filtered)} students")
+        st.markdown(f"**Filtered Records:** {len(df_filtered)} students (Age ≤ {max_age_filter})")
         
         st.markdown("---")
         st.markdown("### 3. Data Visualization")
         
-        cols_to_show = ['Sex', 'Additional_Work', 'Sports_activity', 'Transportation', 
+        import matplotlib.pyplot as plt
+        import matplotlib.colors as mcolors
+        
+        cols_to_show = ['Student_Age', 'Sex', 'Additional_Work', 'Sports_activity', 'Transportation', 
                         'Weekly_Study_Hours', 'Reading', 'Notes', 'Listening_in_Class', 
                         'Project_work', 'Attendance Percentage', 'GPA']
         
-        selected_cols = st.multiselect("Select Columns to Visualize", cols_to_show, default=cols_to_show[:6])
+        selected_cols = st.multiselect("Select Columns to Visualize", cols_to_show, default=cols_to_show)
         
         if selected_cols:
-            for col in selected_cols:
-                st.markdown(f"#### {col}")
-                
-                if df_filtered[col].dtype in ['int64', 'float64']:
-                    col_viz1, col_viz2 = st.columns(2)
-                    with col_viz1:
-                        st.bar_chart(df_filtered[col].value_counts().sort_index())
-                    with col_viz2:
-                        st.markdown(f"**Statistics:**")
-                        st.write(df_filtered[col].describe())
+            fig, ax = plt.subplots(figsize=(12, 6))
+            
+            colors = list(mcolors.TABLEAU_COLORS.values())[:len(selected_cols)]
+            
+            x = np.arange(len(df_filtered))
+            width = 0.8 / len(selected_cols)
+            
+            for i, col in enumerate(selected_cols):
+                if df_filtered[col].dtype == 'object':
+                    values = df_filtered[col].map({'Male': 0, 'Female': 1, 'Yes': 1, 'No': 0, 'Bus': 0, 'Private': 1})
                 else:
-                    st.bar_chart(df_filtered[col].value_counts())
-                st.markdown("---")
+                    values = df_filtered[col]
+                
+                ax.bar(x + i * width, values, width, label=col, color=colors[i])
+            
+            ax.set_xlabel('Student Index')
+            ax.set_ylabel('Value')
+            ax.set_title('Student Performance Data Visualization')
+            ax.set_xticks(x + width * (len(selected_cols) - 1) / 2)
+            ax.set_xticklabels(range(len(df_filtered)), fontsize=8)
+            ax.legend(loc='upper right', fontsize=8)
+            ax.grid(axis='y', alpha=0.3)
+            
+            st.pyplot(fig)
+            
+            st.markdown("### Statistics Summary")
+            st.dataframe(df_filtered[selected_cols].describe())
         
         st.markdown("### 4. Prediction Models")
         
