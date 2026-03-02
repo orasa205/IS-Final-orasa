@@ -89,5 +89,5 @@ streamlit run app.py
 ## 👨‍🎓 Project Information
 
 - **Course**: Intelligent Systems
-- **Student**: [Your Name]
+- **Student**: Orasa Sapram
 - **Year**: 2026
