@@ -947,9 +947,28 @@ elif page == "📊 Student Performance (std.csv)":
                     r2 = r2_score(y_test, y_pred)
                     
                     st.markdown("#### Model Results: Linear Regression")
-                    st.markdown(f"**Mean Squared Error (MSE):** {mse:.4f}")
-                    st.markdown(f"**R² Score:** {r2:.4f}")
-                    st.markdown(f"**Root Mean Squared Error (RMSE):** {np.sqrt(mse):.4f}")
+                    
+                    import matplotlib.pyplot as plt
+                    
+                    col_res1, col_res2 = st.columns(2)
+                    with col_res1:
+                        fig, ax = plt.subplots(figsize=(8, 5))
+                        ax.scatter(y_test, y_pred, alpha=0.6, c='blue', edgecolors='black')
+                        ax.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
+                        ax.set_xlabel('Actual GPA')
+                        ax.set_ylabel('Predicted GPA')
+                        ax.set_title('Actual vs Predicted GPA')
+                        ax.grid(True, alpha=0.3)
+                        st.pyplot(fig)
+                    
+                    with col_res2:
+                        st.markdown(f"**Mean Squared Error (MSE):** {mse:.4f}")
+                        st.markdown(f"**R² Score:** {r2:.4f}")
+                        st.markdown(f"**Root Mean Squared Error (RMSE):** {np.sqrt(mse):.4f}")
+                    
+                    results_df = pd.DataFrame({'Actual GPA': y_test.values, 'Predicted GPA': y_pred})
+                    st.markdown("#### Prediction Results Table")
+                    st.dataframe(results_df.head(10))
                     
                 elif model_type == "K-Nearest Neighbors (KNN)":
                     y_class = (y * 2).astype(int)
@@ -962,6 +981,22 @@ elif page == "📊 Student Performance (std.csv)":
                     acc = accuracy_score(y_test_class, y_pred)
                     
                     st.markdown("#### Model Results: K-Nearest Neighbors (KNN)")
+                    
+                    import matplotlib.pyplot as plt
+                    
+                    fig, ax = plt.subplots(figsize=(8, 5))
+                    categories = ['Correct', 'Incorrect']
+                    correct = int(acc * len(y_test_class))
+                    incorrect = len(y_test_class) - correct
+                    values = [correct, incorrect]
+                    colors = ['#2ecc71', '#e74c3c']
+                    ax.bar(categories, values, color=colors)
+                    ax.set_ylabel('Count')
+                    ax.set_title(f'KNN Classification Results (Accuracy: {acc:.2%})')
+                    for i, v in enumerate(values):
+                        ax.text(i, v + 0.5, str(v), ha='center', fontsize=12)
+                    st.pyplot(fig)
+                    
                     st.markdown(f"**Accuracy:** {acc:.2%}")
                     
                 elif model_type == "Support Vector Machines (SVM)":
@@ -975,6 +1010,22 @@ elif page == "📊 Student Performance (std.csv)":
                     acc = accuracy_score(y_test_class, y_pred)
                     
                     st.markdown("#### Model Results: Support Vector Machines (SVM)")
+                    
+                    import matplotlib.pyplot as plt
+                    
+                    fig, ax = plt.subplots(figsize=(8, 5))
+                    categories = ['Correct', 'Incorrect']
+                    correct = int(acc * len(y_test_class))
+                    incorrect = len(y_test_class) - correct
+                    values = [correct, incorrect]
+                    colors = ['#3498db', '#e74c3c']
+                    ax.bar(categories, values, color=colors)
+                    ax.set_ylabel('Count')
+                    ax.set_title(f'SVM Classification Results (Accuracy: {acc:.2%})')
+                    for i, v in enumerate(values):
+                        ax.text(i, v + 0.5, str(v), ha='center', fontsize=12)
+                    st.pyplot(fig)
+                    
                     st.markdown(f"**Accuracy:** {acc:.2%}")
                 
                 st.success("Model trained successfully!")
