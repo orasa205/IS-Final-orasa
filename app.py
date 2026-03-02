@@ -838,7 +838,10 @@ elif page == "📊 Student Performance (std.csv)":
     st.markdown("### 1. Load Dataset")
     
     try:
+        import os
+        st.markdown(f"Debug - Files in directory: {os.listdir('.')}")
         df = pd.read_csv('Datasets/std.csv')
+        st.markdown("Dataset loaded successfully!")
         
         col_info1, col_info2 = st.columns(2)
         with col_info1:
