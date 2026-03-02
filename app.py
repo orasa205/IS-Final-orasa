@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split
 
 st.set_page_config(
     page_title="Intell - Intelligent Systems Project",
@@ -79,10 +81,12 @@ st.sidebar.title("📚 Navigation")
 st.sidebar.markdown("---")
 page = st.sidebar.radio("Go to:", [
     "🏠 Home",
+    "📊 Student Performance (std.csv)",
     "🤖 Ensemble Model (Machine Learning)",
     "🧪 Test Ensemble Model",
     "🧠 Neural Network Model",
-    "🧪 Test Neural Network"
+    "🧪 Test Neural Network",
+    "🔥 Train Iris Neural Network"
 ])
 
 st.sidebar.markdown("---")
@@ -826,3 +830,291 @@ elif page == "🧪 Test Neural Network":
                 
     except Exception as e:
         st.error(f"Error loading model: {e}")
+
+elif page == "📊 Student Performance (std.csv)":
+    st.markdown('<p class="main-header">📊 Student Performance Analysis</p>', unsafe_allow_html=True)
+    st.markdown("---")
+    
+    st.markdown("### 1. Load Dataset")
+    
+    try:
+        df = pd.read_csv('Datasets/std.csv')
+        
+        col_info1, col_info2 = st.columns(2)
+        with col_info1:
+            st.markdown(f"**Total Records:** {len(df)}")
+        with col_info2:
+            st.markdown(f"**Features:** {len(df.columns)}")
+        
+        st.markdown("### 2. Filter by Age Range")
+        
+        min_age = int(df['Student_Age'].min())
+        max_age = int(df['Student_Age'].max())
+        
+        age_range = st.slider("Select Age Range", min_age, max_age, (min_age, max_age))
+        
+        df_filtered = df[(df['Student_Age'] >= age_range[0]) & (df['Student_Age'] <= age_range[1])]
+        
+        st.markdown(f"**Filtered Records:** {len(df_filtered)} students")
+        
+        st.markdown("---")
+        st.markdown("### 3. Data Visualization")
+        
+        cols_to_show = ['Sex', 'Additional_Work', 'Sports_activity', 'Transportation', 
+                        'Weekly_Study_Hours', 'Reading', 'Notes', 'Listening_in_Class', 
+                        'Project_work', 'Attendance Percentage', 'GPA']
+        
+        selected_cols = st.multiselect("Select Columns to Visualize", cols_to_show, default=cols_to_show[:6])
+        
+        if selected_cols:
+            for col in selected_cols:
+                st.markdown(f"#### {col}")
+                
+                if df_filtered[col].dtype in ['int64', 'float64']:
+                    col_viz1, col_viz2 = st.columns(2)
+                    with col_viz1:
+                        st.bar_chart(df_filtered[col].value_counts().sort_index())
+                    with col_viz2:
+                        st.markdown(f"**Statistics:**")
+                        st.write(df_filtered[col].describe())
+                else:
+                    st.bar_chart(df_filtered[col].value_counts())
+                st.markdown("---")
+        
+        st.markdown("### 4. Prediction Models")
+        
+        model_type = st.selectbox("Select Model", ["Linear Regression", "K-Nearest Neighbors (KNN)", "Support Vector Machines (SVM)"])
+        
+        if st.button("🔮 Train & Predict", type="primary"):
+            with st.spinner("Training model..."):
+                from sklearn.model_selection import train_test_split
+                from sklearn.preprocessing import LabelEncoder, StandardScaler
+                from sklearn.linear_model import LinearRegression
+                from sklearn.neighbors import KNeighborsClassifier
+                from sklearn.svm import SVC
+                from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
+                
+                df_model = df.copy()
+                
+                df_model['Sex'] = df_model['Sex'].map({'Male': 0, 'Female': 1})
+                df_model['Additional_Work'] = df_model['Additional_Work'].map({'Yes': 1, 'No': 0})
+                df_model['Sports_activity'] = df_model['Sports_activity'].map({'Yes': 1, 'No': 0})
+                df_model['Transportation'] = df_model['Transportation'].map({'Bus': 0, 'Private': 1})
+                df_model['Reading'] = df_model['Reading'].map({'Yes': 1, 'No': 0})
+                df_model['Notes'] = df_model['Notes'].map({'Yes': 1, 'No': 0})
+                df_model['Listening_in_Class'] = df_model['Listening_in_Class'].map({'Yes': 1, 'No': 0})
+                df_model['Project_work'] = df_model['Project_work'].map({'Yes': 1, 'No': 0})
+                
+                df_model = df_model.dropna()
+                
+                X = df_model.drop(['GPA'], axis=1)
+                y = df_model['GPA']
+                
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+                
+                scaler = StandardScaler()
+                X_train_scaled = scaler.fit_transform(X_train)
+                X_test_scaled = scaler.transform(X_test)
+                
+                if model_type == "Linear Regression":
+                    model = LinearRegression()
+                    model.fit(X_train_scaled, y_train)
+                    y_pred = model.predict(X_test_scaled)
+                    mse = mean_squared_error(y_test, y_pred)
+                    r2 = r2_score(y_test, y_pred)
+                    
+                    st.markdown("#### Model Results: Linear Regression")
+                    st.markdown(f"**Mean Squared Error (MSE):** {mse:.4f}")
+                    st.markdown(f"**R² Score:** {r2:.4f}")
+                    st.markdown(f"**Root Mean Squared Error (RMSE):** {np.sqrt(mse):.4f}")
+                    
+                elif model_type == "K-Nearest Neighbors (KNN)":
+                    y_class = (y * 2).astype(int)
+                    y_train_class = (y_train * 2).astype(int)
+                    y_test_class = (y_test * 2).astype(int)
+                    
+                    model = KNeighborsClassifier(n_neighbors=5)
+                    model.fit(X_train_scaled, y_train_class)
+                    y_pred = model.predict(X_test_scaled)
+                    acc = accuracy_score(y_test_class, y_pred)
+                    
+                    st.markdown("#### Model Results: K-Nearest Neighbors (KNN)")
+                    st.markdown(f"**Accuracy:** {acc:.2%}")
+                    
+                elif model_type == "Support Vector Machines (SVM)":
+                    y_class = (y * 2).astype(int)
+                    y_train_class = (y_train * 2).astype(int)
+                    y_test_class = (y_test * 2).astype(int)
+                    
+                    model = SVC(kernel='rbf', random_state=42)
+                    model.fit(X_train_scaled, y_train_class)
+                    y_pred = model.predict(X_test_scaled)
+                    acc = accuracy_score(y_test_class, y_pred)
+                    
+                    st.markdown("#### Model Results: Support Vector Machines (SVM)")
+                    st.markdown(f"**Accuracy:** {acc:.2%}")
+                
+                st.success("Model trained successfully!")
+        
+    except Exception as e:
+        st.error(f"Error: {e}")
+
+elif page == "🔥 Train Iris Neural Network":
+    st.markdown('<p class="main-header">🔥 Train Iris Neural Network</p>', unsafe_allow_html=True)
+    st.markdown("---")
+    
+    st.markdown("### 1. Hyperparameters Configuration")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        hidden_layer_size = st.number_input("Hidden Layer Size", min_value=16, max_value=128, value=64, step=16)
+    with col2:
+        num_epochs = st.number_input("Number of Epochs", min_value=50, max_value=200, value=100, step=10)
+    with col3:
+        learning_rate = st.number_input("Learning Rate", min_value=0.00, max_value=0.01, value=0.001, step=0.001, format="%.3f")
+    
+    st.markdown("---")
+    st.markdown("### 2. Load & Prepare Data")
+    
+    try:
+        df_iris = pd.read_csv('Datasets/iris_dirty.csv')
+        
+        st.markdown("#### Raw Data (with issues):")
+        st.dataframe(df_iris.head(10))
+        
+        st.markdown("#### Data Cleaning:")
+        
+        df_clean = df_iris.copy()
+        df_clean = df_clean.drop('Unnamed: 0', axis=1, errors='ignore')
+        
+        df_clean['Sepal.Length'] = pd.to_numeric(df_clean['Sepal.Length'], errors='coerce')
+        df_clean['Sepal.Width'] = pd.to_numeric(df_clean['Sepal.Width'], errors='coerce')
+        df_clean['Petal.Length'] = pd.to_numeric(df_clean['Petal.Length'], errors='coerce')
+        df_clean['Petal.Width'] = pd.to_numeric(df_clean['Petal.Width'], errors='coerce')
+        
+        df_clean['Sepal.Length'].fillna(df_clean['Sepal.Length'].median(), inplace=True)
+        df_clean['Sepal.Width'].fillna(df_clean['Sepal.Width'].median(), inplace=True)
+        df_clean['Petal.Length'].fillna(df_clean['Petal.Length'].median(), inplace=True)
+        df_clean['Petal.Width'].fillna(df_clean['Petal.Width'].median(), inplace=True)
+        
+        df_clean['Species'] = df_clean['Species'].str.lower()
+        
+        le = LabelEncoder()
+        df_clean['Species_encoded'] = le.fit_transform(df_clean['Species'])
+        
+        st.success(f"Cleaned {df_iris.isnull().sum().sum()} missing values")
+        st.success("Normalized species labels to lowercase")
+        
+        X = df_clean.drop(['Species', 'Species_encoded'], axis=1)
+        y = df_clean['Species_encoded']
+        
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+        
+        X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+        
+        st.markdown(f"**Training samples:** {len(X_train)}")
+        st.markdown(f"**Testing samples:** {len(X_test)}")
+        
+        st.markdown("---")
+        st.markdown("### 3. Train Model")
+        
+        if st.button("🚀 Start Training", type="primary"):
+            import tensorflow as tf
+            from tensorflow.keras.models import Sequential
+            from tensorflow.keras.layers import Dense
+            from tensorflow.keras.optimizers import Adam
+            from tensorflow.keras.utils import to_categorical
+            
+            model = Sequential([
+                Dense(hidden_layer_size, activation='relu', input_shape=(4,)),
+                Dense(hidden_layer_size // 2, activation='relu'),
+                Dense(32, activation='relu'),
+                Dense(3, activation='softmax')
+            ])
+            
+            model.compile(
+                optimizer=Adam(learning_rate=learning_rate),
+                loss='categorical_crossentropy',
+                metrics=['accuracy']
+            )
+            
+            y_train_cat = to_categorical(y_train, 3)
+            y_test_cat = to_categorical(y_test, 3)
+            
+            st.markdown("---")
+            st.markdown("### 4. Training Logs")
+            
+            logs_container = st.empty()
+            logs_text = ""
+            
+            epochs_list = []
+            train_loss_list = []
+            val_loss_list = []
+            train_acc_list = []
+            val_acc_list = []
+            
+            progress_bar = st.progress(0)
+            
+            for epoch in range(1, num_epochs + 1):
+                history = model.fit(
+                    X_train, y_train_cat,
+                    epochs=1,
+                    batch_size=16,
+                    validation_data=(X_test, y_test_cat),
+                    verbose=0
+                )
+                
+                train_loss = history.history['loss'][0]
+                val_loss = history.history['val_loss'][0]
+                train_acc = history.history['accuracy'][0]
+                val_acc = history.history['val_accuracy'][0]
+                
+                epochs_list.append(epoch)
+                train_loss_list.append(train_loss)
+                val_loss_list.append(val_loss)
+                train_acc_list.append(train_acc * 100)
+                val_acc_list.append(val_acc * 100)
+                
+                if epoch % 10 == 0 or epoch == num_epochs:
+                    log_msg = f"Epoch [{epoch}/{num_epochs}] - Train Accuracy: {train_acc*100:.2f}% | Validation Accuracy: {val_acc*100:.2f}%"
+                    logs_text += log_msg + "\n"
+                    logs_container.text_area("Training Logs", logs_text, height=200)
+                
+                progress_bar.progress(epoch / num_epochs)
+            
+            st.markdown("---")
+            st.markdown("### 5. Final Accuracy")
+            
+            final_train_acc = train_acc_list[-1]
+            final_val_acc = val_acc_list[-1]
+            
+            st.markdown(f"**Training Accuracy:** {final_train_acc:.2f}%")
+            st.markdown(f"**Validation Accuracy:** {final_val_acc:.2f}%")
+            
+            st.markdown("---")
+            st.markdown("### 6. Training & Validation Loss and Accuracy")
+            
+            chart_data = pd.DataFrame({
+                'Epoch': epochs_list,
+                'Training Loss': train_loss_list,
+                'Validation Loss': val_loss_list,
+                'Training Accuracy': train_acc_list,
+                'Validation Accuracy': val_acc_list
+            })
+            
+            st.line_chart(chart_data.set_index('Epoch'))
+            
+            st.markdown("""
+            **Legend:**
+            - 🔵 Training Loss (Dark Blue)
+            - 🔷 Validation Loss (Light Blue)
+            - 🔴 Training Accuracy (Red)
+            - 🔺 Validation Accuracy (Pink)
+            """)
+            
+            st.success("Training completed successfully!")
+            
+    except Exception as e:
+        st.error(f"Error: {e}")
