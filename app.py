@@ -860,9 +860,6 @@ elif page == "📊 Student Performance (std.csv)":
         st.markdown("---")
         st.markdown("### 3. Data Visualization")
         
-        import matplotlib.pyplot as plt
-        import matplotlib.colors as mcolors
-        
         cols_to_show = ['Student_Age', 'Sex', 'Additional_Work', 'Sports_activity', 'Transportation', 
                         'Weekly_Study_Hours', 'Reading', 'Notes', 'Listening_in_Class', 
                         'Project_work', 'Attendance Percentage', 'GPA']
@@ -870,33 +867,25 @@ elif page == "📊 Student Performance (std.csv)":
         selected_cols = st.multiselect("Select Columns to Visualize", cols_to_show, default=cols_to_show)
         
         if selected_cols:
-            fig, ax = plt.subplots(figsize=(12, 6))
+            df_viz = df_filtered[selected_cols].copy()
             
-            colors = list(mcolors.TABLEAU_COLORS.values())[:len(selected_cols)]
+            df_viz['Sex'] = df_viz['Sex'].map({'Male': 0, 'Female': 1})
+            df_viz['Additional_Work'] = df_viz['Additional_Work'].map({'Yes': 1, 'No': 0})
+            df_viz['Sports_activity'] = df_viz['Sports_activity'].map({'Yes': 1, 'No': 0})
+            df_viz['Transportation'] = df_viz['Transportation'].map({'Bus': 0, 'Private': 1})
+            df_viz['Reading'] = df_viz['Reading'].map({'Yes': 1, 'No': 0})
+            df_viz['Notes'] = df_viz['Notes'].map({'Yes': 1, 'No': 0})
+            df_viz['Listening_in_Class'] = df_viz['Listening_in_Class'].map({'Yes': 1, 'No': 0})
+            df_viz['Project_work'] = df_viz['Project_work'].map({'Yes': 1, 'No': 0})
             
-            x = np.arange(len(df_filtered))
-            width = 0.8 / len(selected_cols)
+            st.markdown("#### 📊 Combined Bar Chart")
+            st.bar_chart(df_viz)
             
-            for i, col in enumerate(selected_cols):
-                if df_filtered[col].dtype == 'object':
-                    values = df_filtered[col].map({'Male': 0, 'Female': 1, 'Yes': 1, 'No': 0, 'Bus': 0, 'Private': 1})
-                else:
-                    values = df_filtered[col]
-                
-                ax.bar(x + i * width, values, width, label=col, color=colors[i])
+            st.markdown("#### 📈 Statistics Summary")
+            st.dataframe(df_viz.describe())
             
-            ax.set_xlabel('Student Index')
-            ax.set_ylabel('Value')
-            ax.set_title('Student Performance Data Visualization')
-            ax.set_xticks(x + width * (len(selected_cols) - 1) / 2)
-            ax.set_xticklabels(range(len(df_filtered)), fontsize=8)
-            ax.legend(loc='upper right', fontsize=8)
-            ax.grid(axis='y', alpha=0.3)
-            
-            st.pyplot(fig)
-            
-            st.markdown("### Statistics Summary")
-            st.dataframe(df_filtered[selected_cols].describe())
+            st.markdown("#### 🔢 Data Table (First 20 rows)")
+            st.dataframe(df_filtered.head(20))
         
         st.markdown("### 4. Prediction Models")
         
