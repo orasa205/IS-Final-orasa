@@ -860,8 +860,6 @@ elif page == "📊 Student Performance (std.csv)":
         st.markdown("---")
         st.markdown("### 3. Data Visualization")
         
-        import matplotlib.pyplot as plt
-        
         cols_to_encode = ['Sex', 'Additional_Work', 'Sports_activity', 'Transportation', 'Reading', 'Notes', 'Listening_in_Class', 'Project_work']
         
         df_viz = df_filtered.copy()
@@ -869,92 +867,23 @@ elif page == "📊 Student Performance (std.csv)":
             if col in df_viz.columns:
                 df_viz[col] = df_viz[col].map({'Male': 0, 'Female': 1, 'Yes': 1, 'No': 0, 'Bus': 0, 'Private': 1})
         
-        viz_type = st.radio("Select Visualization Type", ["📊 Summary by Age", "📈 Feature Comparison", "🎯 GPA Distribution"], horizontal=True)
+        cols_to_show = ['Student_Age', 'Weekly_Study_Hours', 'Attendance Percentage', 'GPA']
         
-        if viz_type == "📊 Summary by Age":
-            numeric_cols = ['Student_Age', 'Weekly_Study_Hours', 'Attendance Percentage', 'GPA']
-            
-            summary = df_viz.groupby('Student_Age')[numeric_cols].mean().reset_index()
-            
-            st.markdown("#### Average Values by Age")
-            st.dataframe(summary)
-            
-            tab1, tab2, tab3 = st.tabs(["📚 Study Hours", "🎯 Attendance", "📊 GPA"])
-            
-            with tab1:
-                fig, ax = plt.subplots(figsize=(8, 4))
-                ax.bar(summary['Student_Age'], summary['Weekly_Study_Hours'], color='#3498db', edgecolor='black')
-                ax.set_xlabel('Age')
-                ax.set_ylabel('Avg Weekly Study Hours')
-                ax.set_title('Average Study Hours by Age')
-                ax.grid(axis='y', alpha=0.3)
-                st.pyplot(fig)
-            
-            with tab2:
-                fig, ax = plt.subplots(figsize=(8, 4))
-                ax.bar(summary['Student_Age'], summary['Attendance Percentage'], color='#2ecc71', edgecolor='black')
-                ax.set_xlabel('Age')
-                ax.set_ylabel('Avg Attendance %')
-                ax.set_title('Average Attendance by Age')
-                ax.grid(axis='y', alpha=0.3)
-                st.pyplot(fig)
-            
-            with tab3:
-                fig, ax = plt.subplots(figsize=(8, 4))
-                ax.bar(summary['Student_Age'], summary['GPA'], color='#9b59b6', edgecolor='black')
-                ax.set_xlabel('Age')
-                ax.set_ylabel('Avg GPA')
-                ax.set_title('Average GPA by Age')
-                ax.grid(axis='y', alpha=0.3)
-                st.pyplot(fig)
+        st.markdown("#### Average Values by Age")
+        summary = df_viz.groupby('Student_Age')[cols_to_show].mean().reset_index()
+        st.dataframe(summary)
         
-        elif viz_type == "📈 Feature Comparison":
-            cols_to_show = ['Weekly_Study_Hours', 'Attendance Percentage', 'GPA']
-            
-            avg_values = df_viz[cols_to_show].mean()
-            
-            fig, ax = plt.subplots(figsize=(10, 5))
-            bars = ax.bar(avg_values.index, avg_values.values, color=['#3498db', '#2ecc71', '#9b59b6'], edgecolor='black')
-            ax.set_ylabel('Average Value')
-            ax.set_title('Average Feature Values')
-            ax.set_ylim(0, max(avg_values.values) * 1.2)
-            
-            for bar, val in zip(bars, avg_values.values):
-                ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, f'{val:.2f}', ha='center', fontsize=10)
-            
-            ax.grid(axis='y', alpha=0.3)
-            st.pyplot(fig)
-            
-            st.markdown("#### Statistics Summary")
-            st.dataframe(df_viz[cols_to_show].describe())
+        st.markdown("#### 📊 Study Hours by Age")
+        st.bar_chart(summary.set_index('Student_Age')['Weekly_Study_Hours'])
         
-        elif viz_type == "🎯 GPA Distribution":
-            fig, ax = plt.subplots(figsize=(8, 5))
-            ax.hist(df_viz['GPA'], bins=10, color='#9b59b6', edgecolor='black', alpha=0.7)
-            ax.set_xlabel('GPA')
-            ax.set_ylabel('Number of Students')
-            ax.set_title('GPA Distribution')
-            ax.grid(axis='y', alpha=0.3)
-            st.pyplot(fig)
-            
-            gpa_ranges = ['0-1', '1-2', '2-3', '3-4']
-            gpa_counts = [
-                len(df_viz[df_viz['GPA'] < 1]),
-                len(df_viz[(df_viz['GPA'] >= 1) & (df_viz['GPA'] < 2)]),
-                len(df_viz[(df_viz['GPA'] >= 2) & (df_viz['GPA'] < 3)]),
-                len(df_viz[df_viz['GPA'] >= 3])
-            ]
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                fig2, ax2 = plt.subplots(figsize=plt.figaspect(1))
-                ax2.pie(gpa_counts, labels=gpa_ranges, autopct='%1.1f%%', colors=['#e74c3c', '#f39c12', '#3498db', '#2ecc71'], startangle=90)
-                ax2.set_title('GPA Distribution')
-                st.pyplot(fig2)
-            with col2:
-                st.markdown("#### GPA Range Summary")
-                for r, c in zip(gpa_ranges, gpa_counts):
-                    st.markdown(f"**{r}:** {c} students ({c/len(df_viz)*100:.1f}%)")
+        st.markdown("#### 📊 Attendance by Age")
+        st.bar_chart(summary.set_index('Student_Age')['Attendance Percentage'])
+        
+        st.markdown("#### 📊 GPA by Age")
+        st.bar_chart(summary.set_index('Student_Age')['GPA'])
+        
+        st.markdown("#### 📈 Statistics Summary")
+        st.dataframe(df_viz[cols_to_show].describe())
         
         st.markdown("### 4. Prediction Models")
         
