@@ -878,8 +878,25 @@ elif page == "📊 Student Performance (std.csv)":
             df_viz['Listening_in_Class'] = df_viz['Listening_in_Class'].map({'Yes': 1, 'No': 0})
             df_viz['Project_work'] = df_viz['Project_work'].map({'Yes': 1, 'No': 0})
             
-            st.markdown("#### 📊 Combined Bar Chart")
-            st.bar_chart(df_viz)
+            import matplotlib.pyplot as plt
+            import matplotlib.colors as mcolors
+            
+            colors = list(mcolors.TABLEAU_COLORS.values())
+            
+            fig, ax = plt.subplots(figsize=(14, 6))
+            
+            x = range(len(df_viz))
+            
+            for i, col in enumerate(selected_cols):
+                ax.scatter(x, df_viz[col], c=colors[i % len(colors)], label=col, s=30, alpha=0.7)
+            
+            ax.set_xlabel('Student Index')
+            ax.set_ylabel('Value')
+            ax.set_title('Student Performance Data Visualization (Scatter Plot)')
+            ax.legend(loc='upper right', fontsize=8, ncol=2)
+            ax.grid(True, alpha=0.3)
+            
+            st.pyplot(fig)
             
             st.markdown("#### 📈 Statistics Summary")
             st.dataframe(df_viz.describe())
