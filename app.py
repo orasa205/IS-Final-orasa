@@ -838,10 +838,7 @@ elif page == "📊 Student Performance (std.csv)":
     st.markdown("### 1. Load Dataset")
     
     try:
-        import os
-        st.markdown(f"Debug - Files in directory: {os.listdir('.')}")
         df = pd.read_csv('Datasets/std.csv')
-        st.markdown("Dataset loaded successfully!")
         
         col_info1, col_info2 = st.columns(2)
         with col_info1:
@@ -863,30 +860,102 @@ elif page == "📊 Student Performance (std.csv)":
         st.markdown("---")
         st.markdown("### 3. Data Visualization")
         
-        cols_to_encode = ['Sex', 'Additional_Work', 'Sports_activity', 'Transportation', 'Reading', 'Notes', 'Listening_in_Class', 'Project_work']
+        import matplotlib.pyplot as plt
         
-        df_viz = df_filtered.copy()
-        for col in cols_to_encode:
-            if col in df_viz.columns:
-                df_viz[col] = df_viz[col].map({'Male': 0, 'Female': 1, 'Yes': 1, 'No': 0, 'Bus': 0, 'Private': 1})
+        col_viz1, col_viz2 = st.columns(2)
         
-        cols_to_show = ['Student_Age', 'Weekly_Study_Hours', 'Attendance Percentage', 'GPA']
+        with col_viz1:
+            sex_counts = df_filtered['Sex'].value_counts()
+            fig, ax = plt.subplots(figsize=(6, 4))
+            ax.pie(sex_counts, labels=sex_counts.index, autopct='%1.1f%%', colors=['#3498db', '#e74c3c'], startangle=90)
+            ax.set_title('Sex Distribution')
+            st.pyplot(fig)
         
-        st.markdown("#### Average Values by Age")
-        summary = df_viz.groupby('Student_Age')[cols_to_show].mean().reset_index()
-        st.dataframe(summary)
+        with col_viz2:
+            work_counts = df_filtered['Additional_Work'].value_counts()
+            fig, ax = plt.subplots(figsize=(6, 4))
+            ax.pie(work_counts, labels=work_counts.index, autopct='%1.1f%%', colors=['#2ecc71', '#e74c3c'], startangle=90)
+            ax.set_title('Additional Work Distribution')
+            st.pyplot(fig)
         
-        st.markdown("#### 📊 Study Hours by Age")
-        st.bar_chart(summary.set_index('Student_Age')['Weekly_Study_Hours'])
+        col_viz3, col_viz4 = st.columns(2)
         
-        st.markdown("#### 📊 Attendance by Age")
-        st.bar_chart(summary.set_index('Student_Age')['Attendance Percentage'])
+        with col_viz3:
+            sports_counts = df_filtered['Sports_activity'].value_counts()
+            fig, ax = plt.subplots(figsize=(6, 4))
+            ax.pie(sports_counts, labels=sports_counts.index, autopct='%1.1f%%', colors=['#9b59b6', '#e74c3c'], startangle=90)
+            ax.set_title('Sports Activity Distribution')
+            st.pyplot(fig)
         
-        st.markdown("#### 📊 GPA by Age")
-        st.bar_chart(summary.set_index('Student_Age')['GPA'])
+        with col_viz4:
+            transport_counts = df_filtered['Transportation'].value_counts()
+            fig, ax = plt.subplots(figsize=(6, 4))
+            ax.pie(transport_counts, labels=transport_counts.index, autopct='%1.1f%%', colors=['#f39c12', '#3498db'], startangle=90)
+            ax.set_title('Transportation Distribution')
+            st.pyplot(fig)
+        
+        col_viz5, col_viz6 = st.columns(2)
+        
+        with col_viz5:
+            reading_counts = df_filtered['Reading'].value_counts()
+            fig, ax = plt.subplots(figsize=(6, 4))
+            ax.pie(reading_counts, labels=reading_counts.index, autopct='%1.1f%%', colors=['#1abc9c', '#e74c3c'], startangle=90)
+            ax.set_title('Reading Distribution')
+            st.pyplot(fig)
+        
+        with col_viz6:
+            notes_counts = df_filtered['Notes'].value_counts()
+            fig, ax = plt.subplots(figsize=(6, 4))
+            ax.pie(notes_counts, labels=notes_counts.index, autopct='%1.1f%%', colors=['#e67e22', '#e74c3c'], startangle=90)
+            ax.set_title('Notes Distribution')
+            st.pyplot(fig)
+        
+        col_viz7, col_viz8 = st.columns(2)
+        
+        with col_viz7:
+            listening_counts = df_filtered['Listening_in_Class'].value_counts()
+            fig, ax = plt.subplots(figsize=(6, 4))
+            ax.pie(listening_counts, labels=listening_counts.index, autopct='%1.1f%%', colors=['#34495e', '#e74c3c'], startangle=90)
+            ax.set_title('Listening in Class Distribution')
+            st.pyplot(fig)
+        
+        with col_viz8:
+            project_counts = df_filtered['Project_work'].value_counts()
+            fig, ax = plt.subplots(figsize=(6, 4))
+            ax.pie(project_counts, labels=project_counts.index, autopct='%1.1f%%', colors=['#16a085', '#e74c3c'], startangle=90)
+            ax.set_title('Project Work Distribution')
+            st.pyplot(fig)
+        
+        col_viz9, col_viz10 = st.columns(2)
+        
+        with col_viz9:
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.hist(df_filtered['Weekly_Study_Hours'], bins=10, color='#3498db', edgecolor='black', alpha=0.7)
+            ax.set_xlabel('Weekly Study Hours')
+            ax.set_ylabel('Count')
+            ax.set_title('Weekly Study Hours Distribution')
+            ax.grid(axis='y', alpha=0.3)
+            st.pyplot(fig)
+        
+        with col_viz10:
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.hist(df_filtered['Attendance Percentage'], bins=10, color='#2ecc71', edgecolor='black', alpha=0.7)
+            ax.set_xlabel('Attendance Percentage')
+            ax.set_ylabel('Count')
+            ax.set_title('Attendance Percentage Distribution')
+            ax.grid(axis='y', alpha=0.3)
+            st.pyplot(fig)
+        
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.hist(df_filtered['GPA'], bins=10, color='#9b59b6', edgecolor='black', alpha=0.7)
+        ax.set_xlabel('GPA')
+        ax.set_ylabel('Count')
+        ax.set_title('GPA Distribution')
+        ax.grid(axis='y', alpha=0.3)
+        st.pyplot(fig)
         
         st.markdown("#### 📈 Statistics Summary")
-        st.dataframe(df_viz[cols_to_show].describe())
+        st.dataframe(df_filtered.describe())
         
         st.markdown("### 4. Prediction Models")
         
